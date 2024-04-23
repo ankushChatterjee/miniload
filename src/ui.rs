@@ -1,4 +1,4 @@
-use std::{collections::HashMap, time::{Instant, SystemTime}};
+use std::{collections::HashMap, time::Instant};
 use lowcharts::plot::{self, MatchBarRow};
 use surf::StatusCode;
 use terminal_emoji::Emoji;
@@ -8,7 +8,7 @@ const REFRESH_TIME: u128 = 300;
 pub struct UI {
     ttfb_points: Vec<f64>,
     total_time_points: Vec<f64>,
-    errors: Vec<String>,
+    errors: HashMap<String, usize>,
     status_map: HashMap<StatusCode, usize>,
     is_done: bool,
     last_updated: Instant
@@ -18,7 +18,7 @@ pub fn new() -> UI {
     return UI {
         ttfb_points: Vec::new(),
         total_time_points: Vec::new(),
-        errors: Vec::new(),
+        errors: HashMap::new(),
         status_map: HashMap::new(),
         is_done: false,
         last_updated: Instant::now()
@@ -48,12 +48,30 @@ impl UI {
     }
 
     pub fn add_error(&mut self, error: String) {
-        self.errors.push(error);
+        if !self.errors.contains_key(&error) {
+            self.errors.insert(error.clone(), 0);
+        }
+        let count = self.errors.get(&error).unwrap();
+        self.errors.insert(error, count + 1);
     }
 
     pub fn done(&mut self) {
         self.is_done = true;
         self.print_stats();
+    }
+
+    fn render_histogram(&self, title:String, vect: Vec<f64>) {
+        println!("=== {} (ms) ===", title);
+        let options = plot::HistogramOptions { intervals: 10, ..Default::default() };
+        let histogram = plot::Histogram::new(&vect, options);
+        println!("{}", histogram);
+    }
+
+    fn render_map(&self, title: String, rows: Vec<MatchBarRow>) {
+        println!();
+        println!("=== {} ===", title);
+        let match_bar = plot::MatchBar::new(rows);
+        println!("{}", match_bar);
     }
 
     fn print_stats(&self) {
@@ -72,18 +90,11 @@ impl UI {
         }
 
         if self.ttfb_points.len() > 0 {
-            println!("=== TTFB (ms) ===");
-            let options = plot::HistogramOptions { intervals: 10, ..Default::default() };
-            let histogram = plot::Histogram::new(&self.ttfb_points, options);
-            println!("{}", histogram);
+            self.render_histogram("TTFB".to_owned(), self.ttfb_points.clone());
         }
         
         if self.total_time_points.len() > 0 {
-            println!();
-            println!("=== Total Time (ms) ===");
-            let options = plot::HistogramOptions { intervals: 10, ..Default::default() };
-            let histogram = plot::Histogram::new(&self.total_time_points, options);
-            println!("{}", histogram);
+            self.render_histogram("Total Time".to_owned(), self.ttfb_points.clone());
         }
 
         if self.status_map.len() > 0 {
@@ -94,18 +105,18 @@ impl UI {
                     count: *count,
                 });
             }
-            println!();
-            println!("=== Status Codes ===");
-            let match_bar = plot::MatchBar::new(status_rows);
-            println!("{}", match_bar);
+            self.render_map("Status Codes".to_owned(), status_rows);
         }
 
         if self.errors.len() > 0 {
-            println!();
-            println!("=== Errors ===");
+            let mut error_rows = Vec::new();
             for error in &self.errors {
-                println!("{}", error);
+                error_rows.push(MatchBarRow {
+                    label: error.0.to_string(),
+                    count: *error.1,
+                });
             }
+            self.render_map("Errors".to_owned(), error_rows);
         };
     }
 }

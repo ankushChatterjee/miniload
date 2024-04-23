@@ -1,9 +1,8 @@
-use std::env::args;
 use std::{sync::Arc, time::Instant};
 
 use clap::Parser;
 use futures::AsyncReadExt;
-use tokio::sync::mpsc::{self, Receiver, Sender};
+use tokio::sync::mpsc::{self, Sender};
 use surf::{Client, StatusCode};
 use surf::http::Error;
 use ui::UI;
