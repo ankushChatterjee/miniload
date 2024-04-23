@@ -94,7 +94,7 @@ impl UI {
         }
         
         if self.total_time_points.len() > 0 {
-            self.render_histogram("Total Time".to_owned(), self.ttfb_points.clone());
+            self.render_histogram("Total Time".to_owned(), self.total_time_points.clone());
         }
 
         if self.status_map.len() > 0 {
