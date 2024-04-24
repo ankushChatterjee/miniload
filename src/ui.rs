@@ -1,5 +1,5 @@
-use std::{collections::HashMap, time::Instant};
 use lowcharts::plot::{self, MatchBarRow};
+use std::{collections::HashMap, time::Instant};
 use surf::StatusCode;
 use terminal_emoji::Emoji;
 
@@ -11,7 +11,7 @@ pub struct UI {
     errors: HashMap<String, usize>,
     status_map: HashMap<StatusCode, usize>,
     is_done: bool,
-    last_updated: Instant
+    last_updated: Instant,
 }
 
 pub fn new() -> UI {
@@ -21,12 +21,11 @@ pub fn new() -> UI {
         errors: HashMap::new(),
         status_map: HashMap::new(),
         is_done: false,
-        last_updated: Instant::now()
+        last_updated: Instant::now(),
     };
 }
 
 impl UI {
-
     pub fn start(&self) {
         self.print_stats();
     }
@@ -60,9 +59,12 @@ impl UI {
         self.print_stats();
     }
 
-    fn render_histogram(&self, title:String, vect: Vec<f64>) {
+    fn render_histogram(&self, title: String, vect: Vec<f64>) {
         println!("=== {} (ms) ===", title);
-        let options = plot::HistogramOptions { intervals: 10, ..Default::default() };
+        let options = plot::HistogramOptions {
+            intervals: 10,
+            ..Default::default()
+        };
         let histogram = plot::Histogram::new(&vect, options);
         println!("{}", histogram);
     }
@@ -77,7 +79,7 @@ impl UI {
     fn print_stats(&self) {
         clearscreen::clear().expect("Error clearing screen");
         let test_emoji = Emoji::new("🧪", "<>");
-        println!("=== {} MiniLoad {} ===",test_emoji, test_emoji);
+        println!("=== {} MiniLoad {} ===", test_emoji, test_emoji);
         println!();
 
         let wait_emoji = Emoji::new("⏱️", "<>");
@@ -86,13 +88,17 @@ impl UI {
         if self.is_done {
             println!("{} Done!", done_emoji);
         } else {
-            println!("{} Waiting... ({} requests completed)", wait_emoji, self.ttfb_points.len() + self.errors.len());
+            println!(
+                "{} Waiting... ({} requests completed)",
+                wait_emoji,
+                self.ttfb_points.len() + self.errors.len()
+            );
         }
 
         if self.ttfb_points.len() > 0 {
             self.render_histogram("TTFB".to_owned(), self.ttfb_points.clone());
         }
-        
+
         if self.total_time_points.len() > 0 {
             self.render_histogram("Total Time".to_owned(), self.total_time_points.clone());
         }
@@ -120,5 +126,3 @@ impl UI {
         };
     }
 }
-
-
