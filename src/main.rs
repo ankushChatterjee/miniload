@@ -39,6 +39,7 @@ async fn run_tasks(url: String, n: u32, c: u32, mut ui: UI) {
     let mut num_concurrent = c;
     let mut extra = n % c;
     ui.start();
+    let full_timer = Instant::now();
     while num_concurrent > 0 {
         let c_url = Arc::clone(&arc_url);
         let txc = tx.clone();
@@ -67,7 +68,7 @@ async fn run_tasks(url: String, n: u32, c: u32, mut ui: UI) {
         }
 
         if received == n {
-            ui.done();
+            ui.done(full_timer.elapsed().as_secs());
             break;
         }
     }

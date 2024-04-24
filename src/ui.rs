@@ -12,6 +12,7 @@ pub struct UI {
     status_map: HashMap<StatusCode, usize>,
     is_done: bool,
     last_updated: Instant,
+    total_duration: u64,
 }
 
 pub fn new() -> UI {
@@ -22,6 +23,7 @@ pub fn new() -> UI {
         status_map: HashMap::new(),
         is_done: false,
         last_updated: Instant::now(),
+        total_duration: 0,
     };
 }
 
@@ -54,8 +56,9 @@ impl UI {
         self.errors.insert(error, count + 1);
     }
 
-    pub fn done(&mut self) {
+    pub fn done(&mut self, duration_secs: u64) {
         self.is_done = true;
+        self.total_duration = duration_secs;
         self.print_stats();
     }
 
@@ -86,7 +89,11 @@ impl UI {
         let done_emoji = Emoji::new("✅", "<>");
 
         if self.is_done {
-            println!("{} Done!", done_emoji);
+            println!(
+                "{} Done! < {} successfull reqs/sec >",
+                done_emoji,
+                (self.ttfb_points.len() as u64 / self.total_duration)
+            );
         } else {
             println!(
                 "{} Waiting... ({} requests completed)",
